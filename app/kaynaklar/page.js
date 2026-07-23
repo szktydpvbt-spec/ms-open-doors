@@ -1,4 +1,4 @@
-import { getSiteContent, getResourceImages } from "@/lib/siteContent";
+import { getSiteContent } from "@/lib/siteContent";
 
 export const metadata = { title: "Kaynaklar — MS Open Doors" };
 
@@ -33,7 +33,6 @@ const links = [
 
 export default async function ResourcesPage() {
   const content = await getSiteContent();
-  const images = await getResourceImages();
 
   return (
     <section className="section">
@@ -50,28 +49,6 @@ export default async function ResourcesPage() {
               <p>{s.body}</p>
             </div>
           ))}
-
-          {images.length > 0 && (
-            <div className="card">
-              <h3>Görseller</h3>
-              <div className="grid grid-3" style={{ marginTop: 12 }}>
-                {images.map((img) => (
-                  <figure key={img.id} style={{ margin: 0 }}>
-                    <img
-                      src={img.url}
-                      alt={img.caption || "Kaynaklar görseli"}
-                      style={{ width: "100%", borderRadius: 8, display: "block" }}
-                    />
-                    {img.caption && (
-                      <figcaption className="muted" style={{ fontSize: 12, marginTop: 6 }}>
-                        {img.caption}
-                      </figcaption>
-                    )}
-                  </figure>
-                ))}
-              </div>
-            </div>
-          )}
 
           <div className="card">
             <h3>Faydalı Kuruluşlar</h3>

@@ -17,7 +17,7 @@ const CONTENT_FIELDS = [
   { key: "contact_note", label: "İletişim Açıklaması", type: "textarea" },
 ];
 
-const TABS = ["Site İçeriği", "Kaynaklar Görselleri", "Paylaşımlar", "Üyeler"];
+const TABS = ["Site İçeriği", "Paylaşımlar", "Üyeler"];
 
 export default function AdminPage() {
   const router = useRouter();
@@ -32,11 +32,6 @@ export default function AdminPage() {
   const [members, setMembers] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
 
-  const [resourceImages, setResourceImages] = useState([]);
-  const [imageCaption, setImageCaption] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState("");
-
   useEffect(() => {
     if (!authLoading && (!session || !profile?.is_admin)) {
       router.push("/");
@@ -47,22 +42,17 @@ export default function AdminPage() {
     if (!isSupabaseConfigured) return;
     setLoadingData(true);
 
-    const [{ data: contentRows }, { data: postRows }, { data: memberRows }, { data: imageRows }] =
-      await Promise.all([
-        supabase.from("site_content").select("key, value"),
-        supabase
-          .from("posts")
-          .select("id, content, created_at, profiles(full_name)")
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("profiles")
-          .select("id, full_name, is_admin, created_at")
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("resource_images")
-          .select("id, url, caption, created_at")
-          .order("created_at", { ascending: false }),
-      ]);
+    const [{ data: contentRows }, { data: postRows }, { data: memberRows }] = await Promise.all([
+      supabase.from("site_content").select("key, value"),
+      supabase
+        .from("posts")
+        .select("id, content, created_at, profiles(full_name)")
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("profiles")
+        .select("id, full_name, is_admin, created_at")
+        .order("created_at", { ascending: false }),
+    ]);
 
     if (contentRows) {
       const map = {};
@@ -71,7 +61,6 @@ export default function AdminPage() {
     }
     setPosts(postRows || []);
     setMembers(memberRows || []);
-    setResourceImages(imageRows || []);
     setLoadingData(false);
   }, []);
 
@@ -99,54 +88,6 @@ export default function AdminPage() {
     const label = current ? "yönetici yetkisini kaldırmak" : "yönetici yapmak";
     if (!confirm(`Bu üyeyi ${label} istediğine emin misin?`)) return;
     await supabase.from("profiles").update({ is_admin: !current }).eq("id", memberId);
-    loadAll();
-  }
-
-  async function handleUploadImage(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    setUploadStatus("");
-
-    const ext = file.name.split(".").pop();
-    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("resource-images")
-      .upload(path, file);
-
-    if (uploadError) {
-      setUploading(false);
-      setUploadStatus("Yüklenemedi: " + uploadError.message);
-      return;
-    }
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("resource-images").getPublicUrl(path);
-
-    const { error: insertError } = await supabase
-      .from("resource_images")
-      .insert({ url: publicUrl, caption: imageCaption.trim() || null });
-
-    setUploading(false);
-    e.target.value = "";
-    if (insertError) {
-      setUploadStatus("Kaydedilemedi: " + insertError.message);
-      return;
-    }
-    setImageCaption("");
-    setUploadStatus("Görsel yüklendi.");
-    loadAll();
-  }
-
-  async function handleDeleteImage(image) {
-    if (!confirm("Bu görseli silmek istediğine emin misin?")) return;
-    const path = image.url.split("/resource-images/")[1];
-    if (path) {
-      await supabase.storage.from("resource-images").remove([path]);
-    }
-    await supabase.from("resource_images").delete().eq("id", image.id);
     loadAll();
   }
 
@@ -210,64 +151,6 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {tab === "Kaynaklar Görselleri" && (
-          <div className="card">
-            <p className="muted" style={{ marginBottom: 16 }}>
-              Buradan yüklediğin görseller Kaynaklar sayfasında listelenir.
-            </p>
-            {uploadStatus && <p className="form-success">{uploadStatus}</p>}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 420 }}>
-              <label style={{ color: "var(--text-muted)", fontSize: 13 }}>
-                Görsel açıklaması (opsiyonel)
-              </label>
-              <input
-                value={imageCaption}
-                onChange={(e) => setImageCaption(e.target.value)}
-                placeholder="Örn: MS ve beslenme infografiği"
-              />
-              <label className="btn btn-sm" style={{ width: "fit-content", cursor: "pointer" }}>
-                {uploading ? "Yükleniyor..." : "Görsel Seç ve Yükle"}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleUploadImage}
-                  disabled={uploading}
-                  style={{ display: "none" }}
-                />
-              </label>
-            </div>
-
-            <div className="grid grid-3" style={{ marginTop: 24 }}>
-              {resourceImages.map((img) => (
-                <div className="card" key={img.id} style={{ padding: 12 }}>
-                  <img
-                    src={img.url}
-                    alt={img.caption || "Kaynaklar görseli"}
-                    style={{ width: "100%", borderRadius: 8, display: "block" }}
-                  />
-                  {img.caption && (
-                    <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
-                      {img.caption}
-                    </p>
-                  )}
-                  <button
-                    className="btn btn-sm btn-danger"
-                    style={{ marginTop: 8 }}
-                    onClick={() => handleDeleteImage(img)}
-                  >
-                    Sil
-                  </button>
-                </div>
-              ))}
-            </div>
-            {!loadingData && resourceImages.length === 0 && (
-              <p className="muted" style={{ marginTop: 16 }}>
-                Henüz görsel yüklenmedi.
-              </p>
-            )}
           </div>
         )}
 

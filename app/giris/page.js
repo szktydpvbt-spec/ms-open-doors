@@ -42,13 +42,6 @@ export default function LoginPage() {
   return (
     <section className="section">
       <div className="container">
-        <div className="hero-image-wrap" style={{ marginBottom: 32 }}>
-          <img
-            src="/agac-kapi.jpg"
-            alt="MS Open Doors — You Won't Be Alone"
-            className="hero-image"
-          />
-        </div>
         <h1 className="section-title">Giriş Yap</h1>
         <form className="form" onSubmit={handleSubmit} style={{ margin: "0 auto" }}>
           <label htmlFor="email">E-posta</label>

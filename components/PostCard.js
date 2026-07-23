@@ -49,7 +49,11 @@ export default function PostCard({
         </div>
       </div>
 
-      <p className="post-content">{post.content}</p>
+      {post.content && <p className="post-content">{post.content}</p>}
+
+      {post.image_url && (
+        <img src={post.image_url} alt="Paylaşım görseli" className="post-image" />
+      )}
 
       <div className="post-actions">
         <button

@@ -68,6 +68,7 @@ a:hover {
 }
 
 .navbar-inner {
+  position: relative;
   max-width: var(--max-width);
   margin: 0 auto;
   padding: 16px 24px;
@@ -75,7 +76,6 @@ a:hover {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  flex-wrap: wrap;
 }
 
 .brand {
@@ -84,6 +84,40 @@ a:hover {
   font-weight: 700;
   color: var(--gold-light);
   letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 38px;
+  height: 38px;
+  padding: 8px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.nav-toggle span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--gold-light);
+  border-radius: 2px;
+}
+
+.nav-collapse {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex: 1;
 }
 
 .nav-links {
@@ -110,6 +144,27 @@ a:hover {
 .nav-links .btn-primary:hover,
 .nav-links .btn-primary.active {
   color: #0a0a0a;
+}
+
+.nav-account {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-left: 26px;
+  border-left: 1px solid var(--border);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.nav-account a {
+  color: var(--text-muted);
+}
+
+.nav-account a:hover,
+.nav-account a.active {
+  color: var(--gold-light);
+  text-decoration: none;
 }
 
 /* --- Buttons --- */
@@ -407,6 +462,15 @@ a:hover {
   margin-bottom: 12px;
 }
 
+.post-image {
+  width: 100%;
+  max-height: 480px;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+  margin-bottom: 12px;
+}
+
 .post-actions {
   display: flex;
   gap: 12px;
@@ -606,4 +670,125 @@ table.admin-table th {
   padding: 14px 18px;
   font-size: 14px;
   color: var(--text);
+}
+
+/* --- Mobil uyumluluk --- */
+@media (max-width: 860px) {
+  .nav-toggle {
+    display: flex;
+  }
+
+  .nav-collapse {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 22px 24px 28px;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  .nav-collapse.open {
+    display: flex;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .nav-account {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    width: 100%;
+    padding-left: 0;
+    padding-top: 18px;
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 16px;
+  }
+
+  .navbar-inner {
+    padding: 14px 16px;
+  }
+
+  .brand {
+    font-size: 18px;
+  }
+
+  .hero {
+    padding: 44px 0 32px;
+  }
+
+  .hero-tree {
+    max-width: 220px;
+  }
+
+  .hero-title {
+    font-size: clamp(30px, 11vw, 44px);
+  }
+
+  .hero-tagline {
+    font-size: 17px;
+  }
+
+  .hero-cta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-cta .btn {
+    width: 100%;
+  }
+
+  .stats-bar {
+    gap: 22px;
+    row-gap: 22px;
+  }
+
+  .section {
+    padding: 40px 0;
+  }
+
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-tabs {
+    gap: 8px;
+  }
+
+  .admin-tab {
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+
+  table.admin-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .form {
+    max-width: 100%;
+  }
+
+  .post-image {
+    max-height: 320px;
+  }
 }

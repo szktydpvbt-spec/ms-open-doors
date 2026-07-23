@@ -7,13 +7,15 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 import PostCard from "@/components/PostCard";
 
 const POST_SELECT =
-  "id, content, created_at, user_id, profiles(full_name), comments(id, content, created_at, user_id, profiles(full_name)), likes(id, user_id)";
+  "id, content, image_url, created_at, user_id, profiles(full_name), comments(id, content, created_at, user_id, profiles(full_name)), likes(id, user_id)";
 
 export default function CommunityPage() {
   const { session, profile } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newPost, setNewPost] = useState("");
+  const [newImage, setNewImage] = useState(null);
+  const [newImagePreview, setNewImagePreview] = useState("");
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState("");
 
@@ -44,20 +46,52 @@ export default function CommunityPage() {
     loadPosts();
   }, [loadPosts]);
 
+  function handleSelectImage(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setNewImage(file);
+    setNewImagePreview(URL.createObjectURL(file));
+  }
+
+  function clearSelectedImage() {
+    setNewImage(null);
+    setNewImagePreview("");
+  }
+
   async function handleCreatePost(e) {
     e.preventDefault();
-    if (!newPost.trim() || !session) return;
+    if ((!newPost.trim() && !newImage) || !session) return;
     setPosting(true);
     setError("");
+
+    let imageUrl = null;
+    if (newImage) {
+      const ext = newImage.name.split(".").pop();
+      const path = `${session.user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("post-images")
+        .upload(path, newImage);
+      if (uploadError) {
+        setPosting(false);
+        setError("Görsel yüklenemedi: " + uploadError.message);
+        return;
+      }
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("post-images").getPublicUrl(path);
+      imageUrl = publicUrl;
+    }
+
     const { error: insertError } = await supabase
       .from("posts")
-      .insert({ content: newPost.trim(), user_id: session.user.id });
+      .insert({ content: newPost.trim(), image_url: imageUrl, user_id: session.user.id });
     setPosting(false);
     if (insertError) {
       setError("Paylaşım gönderilemedi: " + insertError.message);
       return;
     }
     setNewPost("");
+    clearSelectedImage();
     loadPosts();
   }
 
@@ -123,6 +157,35 @@ export default function CommunityPage() {
               value={newPost}
               onChange={(e) => setNewPost(e.target.value)}
             />
+
+            {newImagePreview && (
+              <div style={{ position: "relative", maxWidth: 220 }}>
+                <img
+                  src={newImagePreview}
+                  alt="Seçilen görsel önizleme"
+                  style={{ width: "100%", borderRadius: 8, display: "block" }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-sm btn-danger"
+                  style={{ marginTop: 8 }}
+                  onClick={clearSelectedImage}
+                >
+                  Görseli Kaldır
+                </button>
+              </div>
+            )}
+
+            <label className="btn btn-sm" style={{ width: "fit-content", cursor: "pointer" }}>
+              Resim Ekle
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleSelectImage}
+                style={{ display: "none" }}
+              />
+            </label>
+
             {error && <p className="form-error">{error}</p>}
             <button className="btn btn-primary" type="submit" disabled={posting}>
               {posting ? "Paylaşılıyor..." : "Paylaş"}

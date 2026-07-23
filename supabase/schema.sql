@@ -217,3 +217,33 @@ create policy "Sadece admin storage'dan görsel silebilir"
     bucket_id = 'resource-images'
     and exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin)
   );
+
+-- ---------------------------------------------------------
+-- 8) PAYLAŞIM GÖRSELLERİ (topluluk paylaşımlarına resim ekleme)
+-- ---------------------------------------------------------
+alter table public.posts add column if not exists image_url text;
+
+-- Depolama (storage) bucket'ı: paylaşım görselleri herkese açık okunur,
+-- giriş yapan her üye kendi paylaşımına görsel yükleyebilir, sadece
+-- yükleyen kişi (veya admin) silebilir.
+insert into storage.buckets (id, name, public)
+values ('post-images', 'post-images', true)
+on conflict (id) do nothing;
+
+create policy "Paylasim gorselleri storage'dan herkese acik okunabilir"
+  on storage.objects for select
+  using (bucket_id = 'post-images');
+
+create policy "Giris yapan uye paylasim gorseli yukleyebilir"
+  on storage.objects for insert
+  with check (bucket_id = 'post-images' and auth.role() = 'authenticated');
+
+create policy "Yukleyen uye veya admin paylasim gorselini silebilir"
+  on storage.objects for delete
+  using (
+    bucket_id = 'post-images'
+    and (
+      owner = auth.uid()
+      or exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin)
+    )
+  );

@@ -1,25 +1,19 @@
 import Link from "next/link";
-import HeroStatsOverlay from "@/components/HeroStatsOverlay";
+import TreeDoorArt from "@/components/TreeDoorArt";
+import StatsBar from "@/components/StatsBar";
 import { getSiteContent } from "@/lib/siteContent";
 
 export default async function HomePage() {
-  // content is still fetched for other admin-editable text on the site;
-  // the hero visual itself is the reference photo below (title, tagline,
-  // quote and stat labels are baked into the image).
-  await getSiteContent();
+  const content = await getSiteContent();
 
   return (
     <>
       <section className="hero">
         <div className="container">
-          <div className="hero-image-wrap hero-image-full">
-            <img
-              src="/hero-open-doors.jpg"
-              alt="MS Open Doors — You Won't Be Alone"
-              className="hero-image"
-            />
-            <HeroStatsOverlay />
-          </div>
+          <TreeDoorArt />
+          <h1 className="hero-title">{content.hero_title}</h1>
+          <p className="hero-tagline">{content.hero_tagline}</p>
+          <p className="hero-quote">{content.hero_quote}</p>
           <div className="hero-cta">
             <Link href="/kayit" className="btn btn-primary">
               Ücretsiz Üye Ol
@@ -28,6 +22,7 @@ export default async function HomePage() {
               Topluluğu Keşfet
             </Link>
           </div>
+          <StatsBar />
         </div>
       </section>
 
